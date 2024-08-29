@@ -14,8 +14,8 @@ def teams(webhook, host):
     notify.send()
 
 
-def discord(webhook, host):
+def discord(webhook, host, customer, username):
     notify = DiscordWebhook(
-        url=webhook, content=f"Credentials guessed for host: {host}"
+        url=webhook, content=f"Credentials guessed for host: {host}\nCustomer: {customer}\nUsername: {username}"
     )
-    response = webhook.execute()
+    response = notify.execute()
