@@ -11,12 +11,13 @@ from .utils.notify import discord, slack, teams
 
 
 class Analyzer:
-    def __init__(self, resultsfile, notify, webhook, host, hit_count=0):
+    def __init__(self, resultsfile, notify, webhook, host, customer, hit_count=0,):
         self.resultsfile = resultsfile
         self.notify = notify
         self.webhook = webhook
         self.host = host
         self.hit_count = hit_count
+        self.customer = customer
 
     def analyze(self):
         try:
@@ -64,17 +65,17 @@ class Analyzer:
             for x in success_indicies:
                 success_table.add_row(
                     f"{responses[x][2]}", f"{responses[x][3]}", f"{responses[x][1]}"
+                    
                 )
-
+                self.send_notification(responses[x][2])
             console.print(success_table)
 
-            self.send_notification(len(success_indicies))
+            #self.send_notification(len(success_indicies))
 
             # Returning true to indicate a successfully guessed credential
             return len(success_indicies)
         else:
             console.print("[!] No successful logins", style="danger")
-
             return 0
 
     def http_analyze(self, responses):
@@ -163,7 +164,7 @@ class Analyzer:
         for line in responses[1:]:
             if line[2] in positive_statuses:
                 successes.append(line)
-
+        self.send_notification(1)
         if len(successes) > 0:
             console.print(
                 "[+] Identified potentially sussessful logins!\n", style="good"
@@ -190,22 +191,21 @@ class Analyzer:
             print()
             return 0
 
-    def send_notification(self, hit_total):
+    def send_notification(self, username):
         # we'll only send notifications if NEW successes are found
-        if hit_total > self.hit_count:
+        #if hit_total > self.hit_count:
             # Calling notifications if specified
-            if self.notify:
-                print()
-                console.print(
-                    f"[*] Sending notification to {self.notify} webhook", style="info"
-                )
+        if self.notify:
+            console.print(
+                f"[*] Sending notification to {self.notify} webhook", style="info"
+            )
 
             if self.notify == "slack":
                 slack(self.webhook, self.host)
             elif self.notify == "teams":
                 teams(self.webhook, self.host)
             elif self.notify == "discord":
-                discord(self.webhook, self.host)
+                discord(self.webhook, self.host, self.customer, username)
 
 
 def main(file, notify, webhook, host):
