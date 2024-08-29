@@ -49,6 +49,7 @@ class Spraycharles:
         notify,
         webhook,
         pause,
+        customer,
     ):
         """
         Validate args and initalize class attributes
@@ -141,14 +142,14 @@ class Spraycharles:
             )
             exit()
 
-        if notify and webhook is None:
+        if notify and customer and webhook is None:
             console.print(
-                "[!] Must specify a Webhook URL when the notify flag is used.",
+                "[!] Must specify a Webhook URL and a Customer when the notify flag is used.",
                 style="danger",
             )
             exit()
-
-        # Create spraycharles directories if they don't exist
+        
+            # Create spraycharles directories if they don't exist
         user_home = str(Path.home())
         if not os.path.exists(f"{user_home}/.spraycharles"):
             os.mkdir(f"{user_home}/.spraycharles")
@@ -186,6 +187,7 @@ class Spraycharles:
         self.login_attempts = 0
         self.target = None
         self.log_name = None
+        self.customer = customer
 
     def initialize_module(self):
         """
@@ -254,6 +256,9 @@ class Spraycharles:
 
         if self.notify:
             spray_info.add_row("Notify", f"True ({self.notify})")
+        
+        if self.customer:
+            spray_info.add_row("Customer", f"True ({self.customer})")
 
         log_name = pathlib.PurePath(self.log_name)
         out_name = pathlib.PurePath(self.output)
@@ -461,7 +466,7 @@ class Spraycharles:
 
         # analyze the results to point out possible hits
         analyzer = Analyzer(
-            self.output, self.notify, self.webhook, self.host, self.total_hits
+            self.output, self.notify, self.webhook, self.host, self.customer,self.total_hits
         )
         analyzer.analyze()
 
@@ -655,6 +660,13 @@ def modules():
     type=str,
     help="Webhook used for specified notification module",
 )
+@click.option(
+    "-c",
+    "--customer",
+    required=False,
+    type=str,
+    help="Customer name to send in webhook",
+)
 # Allows user to specify configuration file with --config
 @click_config_file.configuration_option()
 def spray(
@@ -677,6 +689,7 @@ def spray(
     notify,
     webhook,
     pause,
+    customer,
 ):
     """Low and slow password spraying tool."""
 
@@ -708,6 +721,7 @@ def spray(
         notify,
         webhook,
         pause,
+        customer,
     )
 
     spraycharles.initialize_module()
@@ -765,9 +779,9 @@ def gen(infile, outfile):
     default=False,
     help="Target host associated with CSV file.",
 )
-def analyze(infile, notify, webhook, host):
+def analyze(infile, notify, webhook, host, customer):
     """Analyze existing csv files."""
-    analyzer(infile, notify, webhook, host)
+    analyzer(infile, notify, webhook, host, customer)
 
 
 # stock boilerplate
